@@ -38,8 +38,8 @@ class Evento extends Model
     'dt_fimRelatorioParcial'    => ['exclude_if:tipo,PIBEX,PIACEX', 'required', 'date'],
     'dt_inicioRelatorioFinal'   => ['required', 'date'],
     'dt_fimRelatorioFinal'      => ['required', 'date'],
-    'inicioProjeto'             => ['required', 'date'],
-    'fimProjeto'                => ['required', 'date'],
+    // 'inicioProjeto'             => ['required', 'date'],
+    // 'fimProjeto'                => ['required', 'date'],
     //'modeloDocumento'     => [],
   ];
 
@@ -56,7 +56,7 @@ class Evento extends Model
     'tipo'                      => ['required', 'string'],
     'natureza'                  => ['required'],
     'coordenador_id'            => ['required'],
-    'numParticipantes'          => ['required'],
+    // 'numParticipantes'          => ['required'],
     'nome_docExtra'             => ['required_with:check_docExtra','max:255'],
     'tipoAvaliacao'             => ['required'],
     'inicioSubmissao'           => ['required', 'date', 'after:yesterday'],
@@ -72,8 +72,8 @@ class Evento extends Model
     'dt_inicioRelatorioFinal'   => ['required', 'date', 'after:dt_fimRelatorioParcial'],
     'dt_fimRelatorioFinal'      => ['required', 'date', 'after_or_equal:dt_inicioRelatorioFinal'],
     'pdfEdital'                 => [('pdfEditalPreenchido'!=='sim'?'required':''), 'file', 'mimes:pdf', 'max:2048'],
-    'inicioProjeto'             => ['required', 'date', 'after:yesterday'],
-    'fimProjeto'                => ['required', 'date', 'after_or_equal:fimSubmissao'],
+    // 'inicioProjeto'             => ['required', 'date', 'after:yesterday'],
+    // 'fimProjeto'                => ['required', 'date', 'after_or_equal:fimSubmissao'],
   ];
 
   #validação completa dos dados de editais de fluxo continuo
@@ -83,7 +83,7 @@ class Evento extends Model
     'tipo'                => ['required', 'string'],
     'natureza'            => ['required'],
     'coordenador_id'      => ['required'],
-    'numParticipantes'    => ['required'],
+    // 'numParticipantes'    => ['required'],
     'nome_docExtra'       => ['required_with:check_docExtra','max:255'],
     'tipoAvaliacao'       => ['required'],
     'inicioSubmissao'     => ['required', 'date', 'after:yesterday'],
@@ -96,7 +96,7 @@ class Evento extends Model
     'descricao'           => ['required', 'string', 'max:1500'],
     'tipo'                => ['required', 'string'],
     'natureza'            => ['required'],
-    'numParticipantes'    => ['required'],
+    // 'numParticipantes'    => ['required'],
     'tipoAvaliacao'       => ['required'],
     'inicioSubmissao'     => ['required', 'date', 'after_or_equal:inicioSubmissao'],
     'fimSubmissao'        => ['required', 'date', 'after_or_equal:inicioSubmissao'],
@@ -112,8 +112,8 @@ class Evento extends Model
     'dt_fimRelatorioFinal'     => ['required', 'date', 'after_or_equal:dt_inicioRelatorioFinal'],
     'modeloDocumento.*'     => ['file', 'mimes:zip,doc,docx,odt,pdf', 'max:2048'],
     'pdfFormAvalExterno'           => ['file', 'mimes:pdf,doc,docx,xlsx,xls,csv,zip', 'max:2048'],
-    'inicioProjeto'       => ['required', 'date', 'after:resultado_final'],
-    'fimProjeto'          => ['required', 'date', 'after:inicioProjeto'],
+    // 'inicioProjeto'       => ['required', 'date', 'after:resultado_final'],
+    // 'fimProjeto'          => ['required', 'date', 'after:inicioProjeto'],
     'docTutorial'     => ['file', 'mimes:zip,doc,docx,pdf', 'max:2048'],
     'nome_docExtra'       => ['required_with:check_docExtra', 'max:255'],
   ];
@@ -125,7 +125,7 @@ class Evento extends Model
     'tipo'                => ['required', 'string'],
     'natureza'            => ['required'],
     'coordenador_id'      => ['required'],
-    'numParticipantes'    => ['required'],
+    // 'numParticipantes'    => ['required'],
     'nome_docExtra'       => ['required_with:check_docExtra','max:255'],
     'tipoAvaliacao'       => ['required'],
     'inicioSubmissao'     => ['required', 'date', 'after_or_equal:inicioSubmissao'],

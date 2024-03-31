@@ -84,25 +84,17 @@ class EventoController extends Controller
      */
     public function store(Request $request)
     {
+        /** @var Carbon */
         $mytime = Carbon::now('America/Recife');
+
+        /** @var Carbon */
         $yesterday = Carbon::yesterday('America/Recife');
+
+        /** @var string */
         $yesterday = $yesterday->toDateString();
-        //$admResponsavel = AdministradorResponsavel::with('user')->where('user_id', Auth()->user()->id)->first();
+
+        /** @var integer */
         $user_id = Auth()->user()->id;
-        
-        if(isset($request->modeloDocumento)){
-            if(is_array($request->modeloDocumento)) {
-                foreach($request->modeloDocumento as $modelo){
-                    $request->validate([
-                        'modeloDocumento.*' => ['file', 'max:2048', new ExcelRule($modelo)],
-                    ]);
-                }
-            } else {
-                $request->validate([
-                    'modeloDocumento' => ['file', 'max:2048', new ExcelRule($request->modeloDocumento)],
-                ]);
-            }
-        }
 
         if(isset($request->docTutorial)){
             $request->validate([
@@ -114,56 +106,72 @@ class EventoController extends Controller
         $evento = $this->armazenarAnexosTemp($request);
 
         // validar datas nulas antes, pois pode gerar um bug
-        if(
-            $request->inicioSubmissao == null ||
-            $request->fimSubmissao == null    ||
-            $request->inicioRevisao == null   ||
-            $request->fimRevisao == null      ||
-            $request->resultado == null       ||
-            $request->inicioProjeto == null   ||
-            $request->fimProjeto == null
+        if(!isset($request->inicioSubmissao) || !isset($request->fimSubmissao) || !isset($request->inicioRevisao) || !isset($request->fimRevisao) || !isset($request->resultado))
+        {   
+            $validatedData = $request->validate([
+                'nome'                => ['required', 'string'],
+                'descricao'           => ['required', 'string'],
+                'tipo'                => ['required', 'string'],
+                'natureza'            => ['required'],
+                'coordenador_id'      => ['required'],
+                'tipoAvaliacao'       => ['required'],
+                'inicioSubmissao'     => ['required', 'date'],
+                'fimSubmissao'        => ['required', 'date'],
+                'inicioRevisao'       => ['required', 'date'],
+                'fimRevisao'          => ['required', 'date'],
+                'inicio_recurso'      => ['required', 'date'],
+                'fim_recurso'         => ['required', 'date'],
+                'resultado_final'     => ['required', 'date'],
+                'resultado_preliminar'=> ['required', 'date'],
 
-        ){
-            if($request->tipo == 'CONTINUO'){
-                $validatedData = $request->validate(Evento::$continuos_dates_rules);
-            } else {
-                $validatedData = $request->validate(Evento::$dates_rules);
-            }
-
+                'dt_inicioRelatorioParcial'  => $request->dt_inicioRelatorioParcial?['date']:[],
+                'dt_fimRelatorioParcial'     => $request->dt_fimRelatorioParcial?['date']:[],
+                'dt_inicioRelatorioFinal'  => $request->dt_inicioRelatorioFinal?['date']:[],
+                'dt_fimRelatorioFinal'     => $request->dt_fimRelatorioFinal?['date']:[],
+                'pdfEdital'           => [($request->pdfEditalPreenchido!=='sim'?'required':''), 'file', 'mimes:pdf', 'max:2048'],
+                'nome_docExtra'       => [Rule::requiredIf($request->check_docExtra != null), 'max:255'],
+                'pdfRecurso'        => [($request->pdfRecursoPreenchido !== 'sim' ? 'required' : ''), 'file', 'mimes:pdf', 'max:2048'],
+                'modeloDocumento'   => [($request->modeloDocumentoPreenchido!=='sim'?'required':''), 'file', 'mimes:pdf', 'max:2048'],
+            ]);
         }
-        
-        // validacao normal
-        if($request->tipo == 'CONTINUO'){
-            $validatedData = $request->validate(Evento::$continuos_rules);
-        } else {
-            $validatedData = $request->validate(Evento::$rules);
-        }
 
-               
+        //validacao normal
+        $validatedData = $request->validate([
+            'nome'                => ['required', 'string'],
+            'descricao'           => ['required', 'string','max:1500'],
+            'tipo'                => ['required', 'string'],
+            'natureza'            => ['required'],
+            'coordenador_id'      => ['required'],
+            'nome_docExtra'       => [Rule::requiredIf($request->check_docExtra != null),'max:255'],
+
+            'inicioSubmissao'     => ['required', 'date', 'after:yesterday'],
+            'fimSubmissao'        => ['required', 'date', 'after_or_equal:inicioSubmissao'],
+            'inicioRevisao'       => ['required', 'date', 'after:yesterday'],
+            'fimRevisao'          => ['required', 'date', 'after:inicioRevisao', 'after:fimSubmissao'],
+            'resultado_preliminar'=> ['required', 'date', 'after_or_equal:fimRevisao'],
+            'inicio_recurso'      => ['required', 'date', 'after_or_equal:resultado_preliminar'],
+            'fim_recurso'         => ['required', 'date', 'after:inicio_recurso'],
+            'resultado_final'     => ['required', 'date', 'after:fim_recurso'],
+            'dt_inicioRelatorioParcial'  => $request->dt_inicioRelatorioParcial?['date', 'after:resultado_preliminar']:[],
+            'dt_fimRelatorioParcial'     => $request->dt_fimRelatorioParcial?['date', 'after_or_equal:dt_inicioRelatorioParcial']:[],
+            'dt_inicioRelatorioFinal'  => $request->dt_inicioRelatorioFinal?['date', 'after:dt_fimRelatorioParcial']:[],
+            'dt_fimRelatorioFinal'     => $request->dt_fimRelatorioFinal?['date', 'after_or_equal:dt_inicioRelatorioFinal']:[],
+            'pdfEdital'           => [($request->pdfEditalPreenchido!=='sim'?'required':''), 'file', 'mimes:pdf', 'max:2048'],
+            'pdfRecurso'        => [($request->pdfRecursoPreenchido!=='sim'?'required':''), 'file', 'mimes:doc,docx,pdf', 'max:2048'],
+            'modeloDocumento'   => [($request->modeloDocumentoPreenchido!=='sim'?'required':''), 'file', 'mimes:doc,docx,pdf', 'max:2048'],
+        ]);
+
+
         // Validação quando avaliação for por Barema
-        if($request->tipo != 'CONTINUO'){
-            if ($request->tipoAvaliacao == 'form') {
-                $validateAvaliacao = $request->validate([
-                    'pdfFormAvalExterno'    => [($request->pdfFormAvalExternoPreenchido!=='sim'?'required':''), 'file', 'mimes:pdf,doc,docx,xlsx,xls,csv,zip', 'max:2048'],
-                ]);
-            } elseif ($request->tipoAvaliacao == 'campos') {
-                if($request->has('campos')){
-                    $validateCampo = $request->validate([
-                        'inputField.*.nome'        => ['required', 'string'],
-                        'inputField.*.nota_maxima' => ['required'],
-                        'inputField.*.prioridade'  => ['required'],
-                        'somaNotas'                => ['required', 'numeric', 'max:' . $request->pontuacao, 'min:' . $request->pontuacao],
-                        ['somaNotas.*'        => 'A soma das notas máximas deve ser igual a pontuação total definida.']
-                    ]);
-                }
-            } elseif ($request->tipoAvaliacao == 'link') {
-                $validateAvaliacao = $request->validate([
-                    'link'    => ['required', 'url'],
-                ]);
-            }
-        }
+        $validateCampo = $request->validate([
+            'inputField.*.nome'        => ['required', 'string'],
+            'inputField.*.nota_maxima' => ['required'],
+            'inputField.*.prioridade'  => ['required'],
+            'somaNotas'                => ['required', 'numeric', 'max:' . $request->pontuacao, 'min:' . $request->pontuacao],
+            ['somaNotas.*'        => 'A soma das notas máximas deve ser igual a pontuação total definida.']
+        ]);
         
-        //$evento = Evento::create([
+        // Mount Evento Array
         $evento['nome']                = $request->nome;
         $evento['descricao']           = $request->descricao;
         $evento['tipo']                = $request->tipo;
@@ -173,24 +181,26 @@ class EventoController extends Controller
         }
         $evento['inicioSubmissao']     = $request->inicioSubmissao;
         $evento['fimSubmissao']        = $request->fimSubmissao;
+        $evento['inicioRevisao']       = $request->inicioRevisao;
+        $evento['fimRevisao']          = $request->fimRevisao;
+        $evento['inicio_recurso']      = $request->inicio_recurso;
+        $evento['fim_recurso']         = $request->fim_recurso;
+        $evento['resultado_preliminar']= $request->resultado_preliminar;
+        $evento['resultado_final']     = $request->resultado_final;
 
-        if ($request->tipo != "CONTINUO"){   
-            $evento['inicioRevisao']       = $request->inicioRevisao;
-            $evento['fimRevisao']          = $request->fimRevisao;
-            $evento['inicio_recurso']      = $request->inicio_recurso;
-            $evento['fim_recurso']         = $request->fim_recurso;
-            $evento['resultado_preliminar']= $request->resultado_preliminar;
-            $evento['resultado_final']     = $request->resultado_final;
-
-            if($request->tipo != "PIBEX" || $request->tipo != "PIACEX"){
-                $evento['dt_inicioRelatorioParcial']  = $request->dt_inicioRelatorioParcial;
-                $evento['dt_fimRelatorioParcial']     = $request->dt_fimRelatorioParcial;
-            }
-            $evento['dt_inicioRelatorioFinal']  = $request->dt_inicioRelatorioFinal;
-            $evento['dt_fimRelatorioFinal']     = $request->dt_fimRelatorioFinal;
-            $evento['inicioProjeto']       = $request->inicioProjeto;
-            $evento['fimProjeto']          = $request->fimProjeto;
+        if ($request->dt_inicioRelatorioParcial) {
+            $evento['dt_inicioRelatorioParcial']  = $request->dt_inicioRelatorioParcial;
         }
+        if ($request->dt_fimRelatorioParcial) {
+            $evento['dt_fimRelatorioParcial']     = $request->dt_fimRelatorioParcial;
+        }
+        if ($request->dt_inicioRelatorioFinal) {
+            $evento['dt_inicioRelatorioFinal']  = $request->dt_inicioRelatorioFinal;
+        }
+        if ($request->dt_fimRelatorioFinal) {
+            $evento['dt_fimRelatorioFinal']     = $request->dt_fimRelatorioFinal;
+        }
+
         $evento['coordenadorId']       = $request->coordenador_id;
         $evento['criador_id']          = $user_id;
         $evento['numParticipantes']    = $request->numParticipantes;
@@ -198,25 +208,9 @@ class EventoController extends Controller
         $evento['cotaDoutor']               = $request->has('cotaDoutor');
         $evento['obrigatoriedade_docExtra'] = $request->has('obrigatoriedade_docExtra');
         $evento['anexosStatus']        = 'final';
-        $evento['tipoAvaliacao']       = $request->tipoAvaliacao;
-        if($request->tipoAvaliacao == "link") {
-            $evento['formAvaliacaoExterno'] = $request->link;
-        } 
-        //dd($evento);
-        // $user = User::find($request->coordenador_id);
-        // $user->coordenadorComissao()->editais()->save($evento);
-
-        // se vou me tornar coordenador do Evento
-
-        // if($request->isCoordenador == true){
-        //   $evento->coordenadorId = Auth::user()->id;
-        //   $evento->save();
-        // }
-
-        //$evento->coordenadorId = Auth::user()->id;
+        $evento['tipoAvaliacao']       = 'campos';
 
         //-- Salvando anexos finais
-
         if(isset($request->pdfEdital)){
             $pdfEdital = $request->pdfEdital;
             $path = 'pdfEdital/' . $evento->id . '/';
@@ -226,31 +220,13 @@ class EventoController extends Controller
         }
 
         if(isset($request->modeloDocumento)){
-            $count = count($request->modeloDocumento);
-            $zip = new ZipArchive;
-            $filename = "storage/app/modeloDocumento/$evento->id/modelo.zip";
+            $modeloDocumento = $request->modeloDocumento;
+            $extension = $modeloDocumento->extension();
+            $path = 'modeloDocumento/' . $evento->id . '/';
+            $nome = "modelo" . "." . $extension;
+            Storage::putFileAs($path, $modeloDocumento, $nome);
 
-            // Crie o diretório se ele não existir
-            if (!file_exists("storage/app/modeloDocumento/$evento->id")) {
-                mkdir("storage/app/modeloDocumento/$evento->id", 0777, true);
-            }
-            $zip->open($filename, ZipArchive::CREATE | ZipArchive::OVERWRITE);
-            for ($i = 0; $i < $count; $i++) {
-                $zip->addFile($request->modeloDocumento[$i]->getRealPath(), $request->modeloDocumento[$i]->getClientOriginalName());
-            }
-            $zip->close();
-            $evento->modeloDocumento = $filename;
-            $evento->save();
-        }
-
-        if(isset($request->pdfFormAvalExterno) && ($request->tipoAvaliacao == 'form')){
-            $pdfFormAvalExterno = $request->pdfFormAvalExterno;
-            $extension = $pdfFormAvalExterno->extension();
-            $path = 'pdfFormAvalExterno/' . $evento->id . '/';
-            $nome = "formulario de avaliação externo" . "." . $extension;
-            Storage::putFileAs($path, $pdfFormAvalExterno, $nome);
-
-            $evento->formAvaliacaoExterno = $path . $nome;
+            $evento->modeloDocumento = $path . $nome;
         }
 
         if(isset($request->pdfFormAvalRelatorio)){
@@ -262,18 +238,29 @@ class EventoController extends Controller
 
             $evento->formAvaliacaoRelatorio = $path . $nome;
         }
-        if(isset($request->docTutorial) && ($request->tipoAvaliacao == 'form')){
-            $docTutorial = $request->docTutorial;
-            $extension = $docTutorial->extension();
-            $path = 'docTutorial/' . $evento->id . '/';
-            $nome = "documento tutorial" . "." . $extension;
-            Storage::putFileAs($path, $docTutorial, $nome);
 
-            $evento->docTutorial = $path . $nome;
+        if(isset($request->pdfRecurso)){
+            $pdfRecurso = $request->pdfRecurso;
+            $extension = $pdfRecurso->extension();
+            $path = 'pdfRecurso/' . $evento->id . '/';
+            $nome = "recurso" . "." . $extension;
+            Storage::putFileAs($path, $pdfRecurso, $nome);
+
+            $evento->docRecurso = $path . $nome;
+        }
+
+        if(isset($request->pdfRelatorio)){
+            $pdfRelatorio = $request->pdfRelatorio;
+            $extension = $pdfRelatorio->extension();
+            $path = 'pdfRelatorio/' . $evento->id . '/';
+            $nome = "relatorio" . "." . $extension;
+            Storage::putFileAs($path, $pdfRelatorio, $nome);
+
+            $evento->docRelatorio = $path . $nome;
         }
 
         $evento->update();
-
+        
         // Criando campos de avaliacao
         if ($request->tipoAvaliacao == 'campos') {
             if($request->has('campos')){
@@ -291,14 +278,10 @@ class EventoController extends Controller
             }
         }
 
-        // $user = Auth::user();
-        // $subject = "Evento Criado";
-        // Mail::to($user->email)
-        //     ->send(new EventoCriado($user, $subject));
-
         return redirect()->route('admin.editais')->with(['mensagem' => 'Edital criado com sucesso!']);
     }
 
+    /** @return Evento */
     public function armazenarAnexosTemp(Request $request){
 
         //---Anexos do Projeto
@@ -316,40 +299,27 @@ class EventoController extends Controller
             $pasta = 'pdfEdital/' . $eventoTemp->id;
             $eventoTemp->pdfEdital = Storage::putFileAs($pasta, $request->pdfEdital, 'edital.pdf');
         }
-        
         if (!(is_null($request->modeloDocumento))) {
-                $count = count($request->modeloDocumento);
-                $zip = new ZipArchive;
-                $filename = "storage/app/modeloDocumento/$eventoTemp->id/modelo.zip";
-                // Crie o diretório se ele não existir
-                if (!file_exists("storage/app/modeloDocumento/$eventoTemp->id")) {
-                    mkdir("storage/app/modeloDocumento/$eventoTemp->id", 0777, true);
-                }
-                $zip->open($filename, ZipArchive::CREATE | ZipArchive::OVERWRITE);
-                for ($i = 0; $i < $count; $i++) {
-                    $zip->addFile($request->modeloDocumento[$i]->getRealPath(), $request->modeloDocumento[$i]->getClientOriginalName());
-                }
-                $zip->close();
-                $eventoTemp->modeloDocumento = $filename;
-                $eventoTemp->save();
+            $extension = $request->modeloDocumento->extension();
+            $path = 'modeloDocumento/' . $eventoTemp->id;
+            $nome = "modelo" . "." . $extension;
+            $eventoTemp->modeloDocumento = Storage::putFileAs($path, $request->modeloDocumento, $nome);
         }
-
-        if(!(is_null($request->pdfFormAvalExterno)) && ($request->tipoAvaliacao == 'form')) {
-            $extension = $request->pdfFormAvalExterno->extension();
-            $pasta = 'pdfFormAvalExterno/' . $eventoTemp->id;
-            $nome = "formulario de avaliação externo" . "." . $extension;
-            $eventoTemp->formAvaliacaoExterno = Storage::putFileAs($pasta, $request->pdfFormAvalExterno, $nome);
-        }
+        
         if(!(is_null($request->pdfFormAvalRelatorio)) ) {
             $pasta = 'pdfFormAvalRelatorio/' . $eventoTemp->id;
             $eventoTemp->formAvaliacaoRelatorio = Storage::putFileAs($pasta, $request->pdfFormAvalRelatorio, 'formulario de avaliação do relatorio.pdf');
         }
 
-        if(!(is_null($request->docTutorial)) && ($request->tipoAvaliacao == 'form')) {
-            $extension = $request->docTutorial->extension();
-            $pasta = 'docTutorial/' . $eventoTemp->id;
-            $nome = "documento tutorial" . "." . $extension;
-            $eventoTemp->docTutorial = Storage::putFileAs($pasta, $request->docTutorial, $nome);
+        if(!(is_null($request->pdfRecurso)) ) {
+            $pasta = 'pdfRecurso/' . $eventoTemp->id;
+            $nome = "recurso" . "." . $extension;
+            $eventoTemp->docRecurso = Storage::putFileAs($pasta, $request->pdfRecurso, $nome);
+        }
+        if(!(is_null($request->pdfRelatorio)) ) {
+            $pasta = 'pdfRelatorio/' . $eventoTemp->id;
+            $nome = "relatorio" . "." . $extension;
+            $eventoTemp->docRelatorio = Storage::putFileAs($pasta, $request->pdfRelatorio, $nome);
         }
 
         $eventoTemp->update();
@@ -432,7 +402,6 @@ class EventoController extends Controller
      */
     public function edit($id)
     {
-        // dd($id);
         $evento = Evento::find($id);
         $coordenadors = CoordenadorComissao::with('user')->get();
         $coordEvent = CoordenadorComissao::find($evento->coordenadorId);
@@ -463,25 +432,14 @@ class EventoController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, $id)
-    {
-        // AKII
-        // dd($request);
+    {   
         $tipo_usuario = Auth()->user()->tipo;
-        //dd($tipo_usuario);
+        
         $evento = Evento::find($id);
         $yesterday = Carbon::yesterday('America/Recife');
         $yesterday = $yesterday->toDateString();
         $camposAvaliacao = CampoAvaliacao::where('evento_id', $id);
-        if(
-            $request->inicioSubmissao == null ||
-            $request->fimSubmissao == null    ||
-            $request->inicioRevisao == null   ||
-            $request->fimRevisao == null      ||
-            $request->resultado == null       ||
-            $request->inicioProjeto == null   ||
-            $request->fimProjeto == null
-
-        ){
+        if(!isset($request->inicioSubmissao) || !isset($request->fimSubmissao) || !isset($request->inicioRevisao) || !isset($request->fimRevisao) || !isset($request->resultado)) {
             if($request->tipo == 'CONTINUO'){
                 $validatedData = $request->validate(Evento::$continuos_dates_rules);
             } else {
@@ -495,26 +453,15 @@ class EventoController extends Controller
             $validatedData = $request->validate(Evento::$edit_rules);
         }
 
-        if($request->tipo != 'CONTINUO'){
-            if ($request->tipoAvaliacao == 'form') {
-                $validateAvaliacao = $request->validate([
-                    'pdfFormAvalExterno'    => ['file','mimes:pdf,doc,docx,xlsx,xls,csv,zip', 'max:2048'],
-                ]);
-            } elseif ($request->tipoAvaliacao == 'campos') {
-                if($request->has('campos')){
-                    $validateCampo = $request->validate([
-                        'inputField.*.nome'        => ['required', 'string'],
-                        'inputField.*.nota_maxima' => ['required'],
-                        'inputField.*.prioridade'  => ['required'],
-                        'somaNotas'                => ['required', 'numeric', 'max:' . $request->pontuacao, 'min:' . $request->pontuacao],
-                        ['somaNotas.*'        => 'A soma das notas máximas deve ser igual a pontuação total definida.']
-                    ]);
-                }
-            } elseif ($request->tipoAvaliacao == 'link') {
-                $validateAvaliacao = $request->validate([
-                    'link'    => ['required', 'url'],
-                ]);
-            }
+        if($request->tipo != 'CONTINUO')
+        {
+            $validateCampo = $request->validate([
+                'inputField.*.nome'        => ['required', 'string'],
+                'inputField.*.nota_maxima' => ['required'],
+                'inputField.*.prioridade'  => ['required'],
+                'somaNotas'                => ['required', 'numeric', 'max:' . $request->pontuacao, 'min:' . $request->pontuacao],
+                ['somaNotas.*'        => 'A soma das notas máximas deve ser igual a pontuação total definida.']
+            ]);
 
             $evento->inicioRevisao        = $request->inicioRevisao;
             $evento->fimRevisao           = $request->fimRevisao;
@@ -527,9 +474,7 @@ class EventoController extends Controller
             $evento->dt_inicioRelatorioFinal   = $request->dt_inicioRelatorioFinal;
             $evento->dt_fimRelatorioFinal      = $request->dt_fimRelatorioFinal;
             $evento->cotaDoutor                = $request->has('cotaDoutor');
-            $evento->inicioProjeto       = $request->inicioProjeto;
-            $evento->fimProjeto          = $request->fimProjeto;
-            $evento->tipoAvaliacao       = $request->tipoAvaliacao;
+            $evento->tipoAvaliacao       = 'campos';
         }
 
         $evento->nome                 = $request->nome;
@@ -548,10 +493,6 @@ class EventoController extends Controller
         $evento->coordenadorId        = $request->coordenador_id;
         $evento->consu                = $request->has('consu');
         $evento->obrigatoriedade_docExtra                = $request->has('obrigatoriedade_docExtra');
-        
-        if($request->tipoAvaliacao == "link") {
-            $evento->formAvaliacaoExterno = $request->link;
-        }
 
         if($request->pdfEdital != null){
             $pdfEdital = $request->pdfEdital;
@@ -576,25 +517,6 @@ class EventoController extends Controller
             $zip->close();
             $evento->modeloDocumento = $filename;
             $evento->save();
-        }
-        
-        if(isset($request->pdfFormAvalExterno) && ($request->tipoAvaliacao == 'form')){
-            $pdfFormAvalExterno = $request->pdfFormAvalExterno;
-            $extension = $pdfFormAvalExterno->extension();
-            $path = 'pdfFormAvalExterno/' . $evento->id . '/';
-            $nome = "formulario de avaliação externo" . "." . $extension;
-            Storage::putFileAs($path, $pdfFormAvalExterno, $nome);
-
-            $evento->formAvaliacaoExterno = $path . $nome;
-        }
-
-        if ($request->docTutorial != null && ($request->tipoAvaliacao == 'form')){
-            $docTutorial = $request->docTutorial;
-            $extension = $docTutorial->extension();
-            $path = 'docTutorial/' . $evento->id . '/';
-            $nome = "documento tutorial" . "." . $extension;
-            Storage::putFileAs($path, $docTutorial, $nome);
-            $evento->docTutorial = $path . $nome;
         }
 
         if(isset($request->pdfFormAvalRelatorio)){
@@ -626,22 +548,6 @@ class EventoController extends Controller
         }
 
         // Mudança de tipo de avaliação
-        if ($request->tipoAvaliacao != 'form') {
-            //Apagar arquivos do formulário de avaliação
-
-            //if (Storage::exists('pdfFormAvalExterno/' . $evento->id)) {
-            Storage::deleteDirectory('pdfFormAvalExterno/' . $evento->id );
-            //}
-            //if (Storage::exists('docTutorial/' . $evento->id)) {
-            Storage::deleteDirectory('docTutorial/' . $evento->id );
-            //}
-            
-            if ($request->tipoAvaliacao == 'campos') {
-                $evento->formAvaliacaoExterno = null;
-            }
-            $evento->docTutorial = null;
-        }
-
         if ($request->tipoAvaliacao != 'campos') {
             //Apaga campos de avaliacao
             $camposAvaliacao->forceDelete();
