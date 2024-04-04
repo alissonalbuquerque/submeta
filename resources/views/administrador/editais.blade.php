@@ -2,6 +2,10 @@
 
 @section('content')
 
+{{-- @php
+  // dd($eventos[1]->id);
+@endphp --}}
+
 <div class="container" style="margin-top: 100px;">
 
   <div class="container" >
@@ -52,7 +56,7 @@
           @foreach ($eventos as $evento)
             <tr>
               <td>
-                <a href="{{  route('evento.visualizar',['id'=>$evento->id])  }}" class="visualizarEvento">
+                <a href="{{ route('evento.visualizar', ['id' => $evento->id]) }}" class="visualizarEvento">
                     {{ $evento->nome }}
                 </a>
               </td>

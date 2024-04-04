@@ -63,9 +63,10 @@ class AdministradorController extends Controller
     }
 
     public function editais()
-    {
+    {   
         //$admin = Administrador::with('user')->where('user_id', Auth()->user()->id)->first();
         //$eventos = Evento::where('coordenadorId',$admin->id )->get();
+        
         $eventos = Evento::all()->sortByDesc('created_at');
 
         return view('administrador.editais', ['eventos' => $eventos]);
@@ -936,7 +937,7 @@ class AdministradorController extends Controller
         $aval->save();
         $user = $aval->user()->first();
 
-        $subject = 'Convite para avaliar projetos da UFAPE';
+        $subject = 'Convite para avaliar projetos da UPE';
         Mail::to($user->email)
             ->send(new EmailParaUsuarioNaoCadastrado($user->name, '  ', 'Avaliador-Cadastrado', $evento->nome, ' ', $subject, $evento->tipo, $evento->natureza_id));
 
@@ -1075,12 +1076,12 @@ class AdministradorController extends Controller
         }
         if (isset($user)) {
             $passwordTemporario = Str::random(8);
-            $subject = 'Convite para avaliar projetos da UFAPE';
+            $subject = 'Convite para avaliar projetos da UPE';
             Mail::to($emailAvaliador)
                 ->send(new EmailParaUsuarioNaoCadastrado($nomeAvaliador, '  ', 'Avaliador-Cadastrado', $evento->nome, $passwordTemporario, $subject, $evento->tipo, $evento->natureza_id));
         } else {
             $passwordTemporario = Str::random(8);
-            $subject = 'Convite para avaliar projetos da UFAPE';
+            $subject = 'Convite para avaliar projetos da UPE';
             Mail::to($emailAvaliador)
                 ->send(new EmailParaUsuarioNaoCadastrado($nomeAvaliador, '  ', 'Avaliador', $evento->nome, $passwordTemporario, $subject, $evento->tipo, $evento->natureza_id));
             $user = User::create([
@@ -1170,7 +1171,7 @@ class AdministradorController extends Controller
         $notificacao->save();
 
         $trabalho = Trabalho::where('id', $request->trabalho_id)->first();
-        $subject = 'Convite para avaliar projetos da UFAPE - Reenvio';
+        $subject = 'Convite para avaliar projetos da UPE - Reenvio';
         Mail::to($avaliador->user->email)
             ->send(new EmailLembrete($avaliador->user->name, $subject, $trabalho->titulo, $evento->nome, $evento->tipo, $evento->natureza_id, $evento->formAvaliacaoExterno, $avaliador->trabalhos()->where('trabalho_id', $trabalho->id)->first()->pivot->acesso));
 
@@ -1201,12 +1202,12 @@ class AdministradorController extends Controller
 
         if (isset($user)) {
             $passwordTemporario = Str::random(8);
-            $subject = 'Convite para avaliar projetos da UFAPE';
+            $subject = 'Convite para avaliar projetos da UPE';
             Mail::to($emailAvaliador)
                 ->send(new EmailParaUsuarioNaoCadastrado($nomeAvaliador, '  ', 'Avaliador-Cadastrado', $evento->nome, $passwordTemporario, $subject, $evento->tipo, $evento->natureza_id));
         } else {
             $passwordTemporario = Str::random(8);
-            $subject = 'Convite para avaliar projetos da UFAPE';
+            $subject = 'Convite para avaliar projetos da UPE';
             Mail::to($emailAvaliador)
                 ->send(new EmailParaUsuarioNaoCadastrado($nomeAvaliador, '  ', 'Avaliador', $evento->nome, $passwordTemporario, $subject, $evento->tipo, $evento->natureza_id));
             $user = User::create([
@@ -1254,7 +1255,7 @@ class AdministradorController extends Controller
         $avaliador = Avaliador::where('id', $request->avaliador_id)->first();
         $user = $avaliador->user()->first();
 
-        $subject = 'Convite para avaliar projetos da UFAPE - Reenvio';
+        $subject = 'Convite para avaliar projetos da UPE - Reenvio';
         Mail::to($user->email)
             ->send(new EmailParaUsuarioNaoCadastrado($user->name, '  ', 'Avaliador-Cadastrado', $evento->nome, ' ', $subject, $evento->tipo, $evento->natureza_id));
 
