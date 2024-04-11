@@ -72,6 +72,7 @@ class EventoController extends Controller
         $naturezas = Natureza::orderBy('nome')->get();
         $yesterday = Carbon::yesterday('America/Recife');
         $yesterday = $yesterday->toDateString();
+        
         return view('evento.criarEvento', ['coordenadors' => $coordenadors, 'naturezas' => $naturezas, 'ontem' => $yesterday]);
     }
 

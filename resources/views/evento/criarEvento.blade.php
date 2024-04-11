@@ -29,7 +29,7 @@
                 @enderror
             </div>
 
-            <div class="col-sm-5">
+            <div class="col-sm-6">
                 <label for="tipo" class="col-form-label">{{ __('Tipo:') }}<span style="color:red; font-weight:bold;">*</span></label>
                 <select id="tipo" type="text" class="form-control @error('tipo') is-invalid @enderror" name="tipo" value="{{ old('tipo') }}" required>
                     <option @if(old('tipo') == "COMPONENTES_CURRICULARES")) selected @endif value="COMPONENTES_CURRICULARES">APOIO À VIVÊNCIA DE COMPONENTES CURRICULARES</option>
@@ -44,7 +44,7 @@
                 @enderror
             </div>
 
-            <div class="col-sm-2">
+            <div class="col-sm-3">
                 <label for="natureza" class="col-form-label">{{ __('Natureza:') }}<span style="color:red; font-weight:bold;">*</span></label>
                 <select onchange="selecionar_decisao_camara()" id="natureza" type="text" class="form-control @error('natureza') is-invalid @enderror" name="natureza" value="{{ old('natureza') }}">
                     @foreach ($naturezas as $natureza)
@@ -58,7 +58,7 @@
                 </span>
                 @enderror
             </div>
-            <div class="col-sm-2">
+            <div class="col-sm-3">
                 <label for="numParticipantes" class="col-form-label">{{ __('Nº de Discentes:') }}</label>
 
                 <input id="numParticipantes" type="number" min="1" max="500" class="form-control @error('numParticipantes') is-invalid @enderror" name="numParticipantes" value="{{ old('numParticipantes') }}" autocomplete="numParticipantes" autofocus>
@@ -72,23 +72,13 @@
         </div>
         {{-- end nome | Participantes | Tipo--}}
 
-
         <div class="row justify-content-start mb-1 mt-2">
 
-            <div class="col-sm-2">
+            <div class="col-sm-3">
                 <label for="check_docExtra" class="col-form-label">{{ __('Documento extra?') }}</label>
                 <input type="checkbox" name="check_docExtra" id="check_docExtra" onclick="showDocumentoExtra()" style="margin-left: 5px" {{ old('check_docExtra') ? 'checked' : ''}}>
             </div>
 
-            <!-- <div class="col-sm-5">
-                <label for="consu" id="decisaoCamara" class="col-form-label">{{ __('Decisão da Câmara ou Conselho Pertinente: Obrigatório? ') }} </label>
-                <input type="checkbox" name="consu" id="consu" style="margin-left: 5px" {{ old('consu') ? 'checked' : ''}}>
-                @error('consu')
-                <span class="invalid-feedback" role="alert">
-                    <strong>{{ $message }}</strong>
-                </span>
-                @enderror
-            </div> -->
             <div class="col-sm-3">
                 <label for="cotaDoutor" class="col-form-label">{{ __('Cota para recém doutor: ') }}</label>
                 <input type="checkbox" name="cotaDoutor" id="cotaDoutor" style="margin-left: 5px" {{ old('cotaDoutor') ? 'checked' : ''}}>
@@ -99,16 +89,8 @@
                 </span>
                 @enderror
             </div>
+            
             {{--Nome do Documento Extra--}}
-            <div class='col-md-4' style='display:none'>
-                <label for="nome_docExtra" class="col-form-label">{{ __('Digite o nome do Documento') }} <span style="color:red; font-weight:bold;">*</span></label>
-                <input id="nome_docExtra" type="text" class="form-control @error('nome_docExtra') is-invalid @enderror" name="nome_docExtra" value="{{ old('nome_docExtra') }}" placeholder="Nome do Documento" autocomplete="nome_docExtra" autofocus>
-                @error('nome_docExtra')
-                <span class="invalid-feedback" role="alert">
-                    <strong>{{ $message }}</strong>
-                </span>
-                @enderror
-            </div>
 
             <div class="col-sm-3" style="display: none">
                 <label for="obrigatoriedade_docExtra" class="col-form-label">{{ __('Obrigatoriedade: ') }}</label>
@@ -119,6 +101,17 @@
                 </span>
                 @enderror
             </div>
+
+            <div class='col-md-3' style='display:none'>
+                <label for="nome_docExtra" class="col-form-label">{{ __('Digite o nome do Documento') }} <span style="color:red; font-weight:bold;">*</span></label>
+                <input id="nome_docExtra" type="text" class="form-control @error('nome_docExtra') is-invalid @enderror" name="nome_docExtra" value="{{ old('nome_docExtra') }}" placeholder="Nome do Documento" autocomplete="nome_docExtra" autofocus>
+                @error('nome_docExtra')
+                <span class="invalid-feedback" role="alert">
+                    <strong>{{ $message }}</strong>
+                </span>
+                @enderror
+            </div>
+
         </div>
 
         {{-- Descricao Edital --}}

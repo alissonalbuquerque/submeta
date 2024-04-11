@@ -45,7 +45,7 @@
             {{--End Nome do evento--}}
 
             {{-- Tipo do evento --}}
-            <div class="col-sm-5">
+            <div class="col-sm-6">
                 <label for="tipo" class="col-form-label">{{ __('Tipo:') }}<span style="color: red; font-weight: bold;">*</span></label>
 
                 <select id="tipo" type="text" class="form-control @error('tipo') is-invalid @enderror" name="tipo" required onchange="selectTipo()">
@@ -62,7 +62,7 @@
             </div>
             {{-- Tipo do evento --}}
 
-            <div class="col-sm-2">
+            <div class="col-sm-3">
                 <label for="natureza" class="col-form-label">{{ __('Natureza:') }}<span style="color: red; font-weight: bold;">*</span></label>
                 <select id="natureza" type="text" class="form-control @error('natureza') is-invalid @enderror" name="natureza" value="{{ old('natureza') }}" required>
                     @foreach ($naturezas as $natureza)
@@ -80,7 +80,7 @@
                 </span>
                 @enderror
             </div>
-            <div class="col-sm-2">
+            <div class="col-sm-3">
                 <label for="numParticipantes" class="col-form-label">{{ __('Nº de Discentes:') }}</label>
                 <input id="numParticipantes" type="number" min="0" max="500" class="form-control @error('numParticipantes') is-invalid @enderror" name="numParticipantes" value="{{ $evento->numParticipantes }}" autocomplete="numParticipantes" autofocus>
 
@@ -95,20 +95,9 @@
 
         <div class="row justify-content-start mb-1 mt-2">
 
-            <div class="col-sm-2">
+            <div class="col-sm-3">
                 <label for="check_docExtra" class="col-form-label">{{ __('Documento extra?') }}</label>
                 <input type="checkbox" name="check_docExtra" id="check_docExtra" onclick="showDocumentoExtra()" style="margin-left: 5px" @if($evento->nome_docExtra != null ) checked @endif {{ old('check_docExtra') ? 'checked' : ''}}>
-            </div>
-
-            <div class="col-sm-5">
-                <label for="consu" class="col-form-label">{{ __('Decisão da Câmara ou Conselho Pertinente: obrigatório? ') }}</label>
-                <input type="checkbox" @if($evento->consu) checked @endif name="consu" id="consu">
-
-                @error('consu')
-                <span class="invalid-feedback" role="alert">
-                    <strong>{{ $message }}</strong>
-                </span>
-                @enderror
             </div>
 
             <div class="col-sm-3" id='div-cot-doutor'>
@@ -123,20 +112,20 @@
             </div>
 
             {{--Nome do Documento Extra--}}
-            <div class='col-md-4' style='display:none'>
-                <label for="nome_docExtra" class="col-form-label">{{ __('Digite o nome do Documento') }} <span style="color:red; font-weight:bold;">*</span></label>
-                <input id="nome_docExtra" type="text" class="form-control @error('nome_docExtra') is-invalid @enderror" name="nome_docExtra" @if($evento->nome_docExtra != null ) value="{{$evento->nome_docExtra}}" @else value="{{ old('nome_docExtra')}}" @endif placeholder="Nome do Documento" autocomplete="nome_docExtra" autofocus>
-                @error('nome_docExtra')
+            <div class="col-sm-3" style="display: none">
+                <label for="obrigatoriedade_docExtra" class="col-form-label">{{ __('Obrigatoriedade: ') }}</label>
+                <input type="checkbox" name="obrigatoriedade_docExtra" id="obrigatoriedade_docExtra" style="margin-left: 5px" @if($evento->obrigatoriedade_docExtra != null ) checked @endif {{ old('obrigatoriedade_docExtra') ? 'checked' : ''}}>
+                @error('obrigatoriedade_docExtra')
                 <span class="invalid-feedback" role="alert">
                     <strong>{{ $message }}</strong>
                 </span>
                 @enderror
             </div>
 
-            <div class="col-sm-3" style="display: none">
-                <label for="obrigatoriedade_docExtra" class="col-form-label">{{ __('Obrigatoriedade: ') }}</label>
-                <input type="checkbox" name="obrigatoriedade_docExtra" id="obrigatoriedade_docExtra" style="margin-left: 5px" @if($evento->obrigatoriedade_docExtra != null ) checked @endif {{ old('obrigatoriedade_docExtra') ? 'checked' : ''}}>
-                @error('obrigatoriedade_docExtra')
+            <div class='col-md-3' style='display:none'>
+                <label for="nome_docExtra" class="col-form-label">{{ __('Digite o nome do Documento') }} <span style="color:red; font-weight:bold;">*</span></label>
+                <input id="nome_docExtra" type="text" class="form-control @error('nome_docExtra') is-invalid @enderror" name="nome_docExtra" @if($evento->nome_docExtra != null ) value="{{$evento->nome_docExtra}}" @else value="{{ old('nome_docExtra')}}" @endif placeholder="Nome do Documento" autocomplete="nome_docExtra" autofocus>
+                @error('nome_docExtra')
                 <span class="invalid-feedback" role="alert">
                     <strong>{{ $message }}</strong>
                 </span>

@@ -91,6 +91,8 @@ class AvaliadorController extends Controller
         if ($evento->tipoAvaliacao == 'campos' || $evento->tipoAvaliacao == 'link') {
             $trabalhos = $aval->trabalhos->where('evento_id', $request->evento_id);
 
+            dd($aval->trabalhos);
+
         } else {
             foreach ($aval->trabalhos->where('evento_id',$evento->id) as $trab){
                 if($aval->trabalhos()->where("trabalho_id",$trab->id)->wherePivot('avaliador_id', $aval->id)->wherePivot('acesso', 2)->orderBy('created_at','DESC')->first()
